@@ -1,0 +1,86 @@
+:root {
+    --primary: #000000;    
+    --accent: #e74c3c;     
+    --bg: #ffffff;         
+    --card-bg: #f4f4f4;    
+}
+
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background-color: var(--bg); 
+    display: flex; 
+    justify-content: center; 
+    padding: 40px 20px; 
+    margin: 0;
+    color: var(--primary);
+}
+
+.container { 
+    background: white; 
+    padding: 30px; 
+    border-radius: 15px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+    width: 100%; 
+    max-width: 450px; 
+    border-top: 8px solid var(--accent); 
+}
+
+h1 { 
+    color: var(--primary); 
+    text-align: center; 
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 10px;
+    text-transform: uppercase;
+}
+
+/* --- LOGO Y ENCABEZADO --- */
+.logo-container { text-align: center; margin-bottom: 15px; }
+.logo-img { max-width: 150px; height: auto; }
+.fecha { text-align: center; color: #7f8c8d; font-size: 0.9rem; margin-bottom: 5px; text-transform: capitalize; }
+
+/* --- RELOJ --- */
+.reloj {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* --- INPUTS --- */
+label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.8rem; color: #333; }
+input { 
+    width: 100%; padding: 12px; margin-bottom: 15px;
+    border: 2px solid #ddd; border-radius: 5px; font-size: 16px;
+}
+.inputs-porcentajes { 
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
+    background: var(--card-bg); padding: 15px; border-radius: 10px;
+}
+
+/* --- BOTONES --- */
+.acciones { display: flex; gap: 10px; margin-top: 20px; }
+button { cursor: pointer; border: none; font-weight: bold; border-radius: 5px; transition: 0.3s; }
+
+.btn-principal { 
+    flex: 2; padding: 15px; 
+    background-color: var(--accent); color: white; font-size: 1rem; 
+}
+.btn-principal:hover { background-color: #c0392b; }
+
+.btn-limpiar { 
+    flex: 1; background-color: #ddd; color: #333; 
+}
+
+/* --- TARJETAS DE RESULTADO --- */
+.card { 
+    background: white; padding: 15px; margin-top: 10px; 
+    border-radius: 5px; display: flex; justify-content: space-between; 
+    align-items: center; border: 1px solid #eee;
+}
+.cantidad-numero { 
+    background: var(--accent); color: white; 
+    padding: 5px 15px; border-radius: 5px; font-weight: bold; 
+}

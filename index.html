@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Mix - Fábrica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        
+     <header>
+    <div class="logo-container">
+        <img src="logo-empresa.png" alt="Logo de la Empresa" class="logo-img">
+    </div>
+    <h1>PRODUCCION MIX STOCK </h1>
+    <p id="fecha-actual" class="fecha"></p>
+    <p id="reloj-vivo" class="reloj"></p> 
+
+</header>
+   <div class="seccion">
+            <label>Total de Unidades a Producir:</label>
+            <input type="number" id="inputAutos" placeholder="Ingrese cantidad total...">
+        </div>
+
+        <h3>Configuración de Porcentajes</h3>
+        <div class="inputs-porcentajes">
+            <label>Drive (%)<input type="number" id="pDrive" value="5"></label>
+            <label>Design (%)<input type="number" id="pDesign" value="50"></label>
+            <label>C. Marrón (%)<input type="number" id="pMarron" value="20"></label>
+            <label>C. Gris (%)<input type="number" id="pGris" value="25"></label>
+        </div>
+
+        <div class="acciones">
+            <button onclick="calcular()" class="btn-principal">CALCULAR REPORTE</button>
+            <button onclick="limpiar()" class="btn-limpiar">Limpiar</button>
+        </div>
+
+        <div id="resultados" class="grid-resultados">
+            </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
