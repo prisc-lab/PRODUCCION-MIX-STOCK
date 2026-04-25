@@ -3,42 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Mix - Fábrica</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Gestión Stock Lear - Producción/Logística</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; padding: 10px; margin: 0; }
+        .header { background: #003366; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 15px; }
+        .seccion-titulo { background: #ddd; padding: 10px; font-weight: bold; text-align: center; border-radius: 5px; margin: 15px 0; }
+        
+        .card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 10px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card.critico { background: #ffe6e6; border-color: #ff0000; } /* Alerta stock bajo */
+        
+        .info { display: flex; justify-content: space-between; align-items: center; }
+        .pn { font-size: 0.8em; color: #666; display: block; }
+        .nombre { font-weight: bold; font-size: 1.1em; }
+        .stock-val { font-size: 1.5em; font-weight: bold; color: #003366; }
+        
+        .controles { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-mas { background: #28a745; }
+        .btn-menos { background: #dc3545; }
+        
+        /* Colores del Excel */
+        .color-entry { border-left-color: #dce6f1; }
+        .color-drive { border-left-color: #ebf1de; }
+        .color-apb { border-left-color: #76933c; }
+        .color-sdesign { border-left-color: #ffc000; }
+        .color-cuero { border-left-color: #c0504d; }
+        .color-kp1 { border-left-color: #d9d9d9; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        
-     <header>
-    <div class="logo-container">
-        <img src="logo-empresa.png" alt="Logo de la Empresa" class="logo-img">
+
+    <div class="header">
+        <h2 style="margin:0;">GESTOR DE STOCK REAL</h2>
+        <small id="estado-db">Conectando...</small>
     </div>
-    <h1>PRODUCCION MIX STOCK </h1>
-    <p id="fecha-actual" class="fecha"></p>
-    <p id="reloj-vivo" class="reloj"></p> 
 
-</header>
-   <div class="seccion">
-            <label>Total de Unidades a Producir:</label>
-            <input type="number" id="inputAutos" placeholder="Ingrese cantidad total...">
-        </div>
+    <div class="seccion-titulo">PROYECTO X6S (Cronos)</div>
+    <div id="contenedor-x6s"></div>
 
-        <h3>Configuración de Porcentajes</h3>
-        <div class="inputs-porcentajes">
-            <label>Drive (%)<input type="number" id="pDrive" value="5"></label>
-            <label>Design (%)<input type="number" id="pDesign" value="50"></label>
-            <label>C. Marrón (%)<input type="number" id="pMarron" value="20"></label>
-            <label>C. Gris (%)<input type="number" id="pGris" value="25"></label>
-        </div>
+    <div class="seccion-titulo">PROYECTO KP1 (Titano/Ram)</div>
+    <div id="contenedor-kp1"></div>
 
-        <div class="acciones">
-            <button onclick="calcular()" class="btn-principal">CALCULAR REPORTE</button>
-            <button onclick="limpiar()" class="btn-limpiar">Limpiar</button>
-        </div>
+    <script>
+        // TU CONFIGURACIÓN DE FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyBosJkUx7sKYz8AfJAG6-7Ln0jGbzbw_FU",
+            authDomain: "gestion-stock-lear.firebaseapp.com",
+            databaseURL: "https://gestion-stock-lear-default-rtdb.firebaseio.com",
+            projectId: "gestion-stock-lear",
+            storageBucket: "gestion-stock-lear.firebasestorage.app",
+            messagingSenderId: "351720665066",
+            appId: "1:351720665066:web:a54b5c3122960417bdcc93"
+        };
 
-        <div id="resultados" class="grid-resultados">
-            </div>
-    </div>
-    <script src="script.js"></script>
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Definición de Modelos (basado en tu imagen)
+        const modelos = [
+            { id: "entry", pn: "L003351135NCPAA", desc: "KIT ENTRY 26", linea: "X6S", color: "color-entry", seguridad: 420 },
+            { id: "drive", pn: "L003351251NCPAA", desc: "KIT DRIVE 26", linea: "X6S", color: "color-drive", seguridad: 420 },
+            { id: "apb", pn: "L003411462NCPAA", desc: "KIT DRIVE APB 26", linea: "X6S", color: "color-apb", seguridad: 200 },
+            { id: "sdesign", pn: "L003351252NCPAA", desc: "TELA SDESIGN 26", linea: "X6S", color: "color-sdesign", seguridad: 150 },
+            { id: "n2", pn: "L004097919NCPAA", desc: "N2 KP1", linea: "KP1", color: "color-kp1", seguridad: 120 },
+            { id: "bighorn", pn: "L003714499NCPAA", desc: "LL1 BIG HORN", linea: "KP1", color: "color-kp1", seguridad: 80 }
+        ];
+
+        // Función para renderizar tarjetas
+        function renderizarTarjetas() {
+            document.getElementById('contenedor-x6s').innerHTML = '';
+            document.getElementById('contenedor-kp1').innerHTML = '';
+
+            modelos.forEach(m => {
+                const contenedor = m.linea === "X6S" ? 'contenedor-x6s' : 'contenedor-kp1';
+                const card = document.createElement('div');
+                card.className = `card ${m.color}`;
+                card.id = `card-${m.id}`;
+                
+                card.innerHTML = `
+                    <div class="info">
+                        <div>
+                            <span class="pn">${m.pn}</span>
+                            <span class="nombre">${m.desc}</span>
+                        </div>
+                        <div class="stock-val" id="val-${m.id}">...</div>
+                    </div>
+                    <div class="controles">
+                        <button class="btn-menos" onclick="ajustar('${m.id}', -1)">LOGÍSTICA (-1)</button>
+                        <button class="btn-mas" onclick="ajustar('${m.id}', 1)">PRODUCCIÓN (+1)</button>
+                    </div>
+                `;
+                document.getElementById(contenedor).appendChild(card);
+            });
+        }
+
+        // Función para ajustar stock
+        window.ajustar = function(id, cambio) {
+            const ref = db.ref('stock/' + id);
+            ref.transaction(actual => (actual || 0) + cambio);
+        }
+
+        // Escuchar cambios en tiempo real
+        db.ref('stock').on('value', (snapshot) => {
+            document.getElementById('estado-db').innerText = "🟢 En línea (Tiempo Real)";
+            const data = snapshot.val() || {};
+            modelos.forEach(m => {
+                const stockActual = data[m.id] || 0;
+                const el = document.getElementById(`val-${m.id}`);
+                const card = document.getElementById(`card-${m.id}`);
+                
+                if(el) el.innerText = stockActual;
+                
+                // Alerta de stock de seguridad
+                if(stockActual < m.seguridad) {
+                    card.classList.add('critico');
+                } else {
+                    card.classList.remove('critico');
+                }
+            });
+        });
+
+        renderizarTarjetas();
+    </script>
 </body>
 </html>
