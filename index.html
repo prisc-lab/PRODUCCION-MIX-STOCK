@@ -3,51 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Stock Lear - Producción/Logística</title>
+    <title>LEAR - Control de Stock</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; padding: 10px; margin: 0; }
-        .header { background: #003366; color: white; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 15px; }
-        .seccion-titulo { background: #ddd; padding: 10px; font-weight: bold; text-align: center; border-radius: 5px; margin: 15px 0; }
-        
-        .card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 10px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .card.critico { background: #ffe6e6; border-color: #ff0000; } /* Alerta stock bajo */
-        
-        .info { display: flex; justify-content: space-between; align-items: center; }
-        .pn { font-size: 0.8em; color: #666; display: block; }
-        .nombre { font-weight: bold; font-size: 1.1em; }
-        .stock-val { font-size: 1.5em; font-weight: bold; color: #003366; }
-        
-        .controles { display: flex; gap: 10px; margin-top: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
-        .btn-mas { background: #28a745; }
-        .btn-menos { background: #dc3545; }
-        
-        /* Colores del Excel */
-        .color-entry { border-left-color: #dce6f1; }
-        .color-drive { border-left-color: #ebf1de; }
-        .color-apb { border-left-color: #76933c; }
-        .color-sdesign { border-left-color: #ffc000; }
-        .color-cuero { border-left-color: #c0504d; }
-        .color-kp1 { border-left-color: #d9d9d9; }
+        :root {
+            --bg: #000000;
+            --card-bg: #111111;
+            --texto: #ffffff;
+            --rojo: #ff0000;
+            --gris: #333333;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--texto); 
+            margin: 0; 
+            padding: 10px;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid var(--rojo);
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        h1 { font-size: 1.2em; letter-spacing: 2px; margin: 0; }
+
+        /* Contenedor de dos columnas */
+        .dashboard {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap; /* Se apila en celulares */
+        }
+
+        .columna {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .titulo-linea {
+            background: var(--rojo);
+            font-size: 0.8em;
+            padding: 5px 10px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* La Tarjeta (Fila) */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--gris);
+            margin-bottom: 5px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center; /* Alinea todo al centro vertical */
+            justify-content: space-between; /* Texto a la izquierda, botones a la derecha */
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+            max-width: 60%;
+        }
+
+        .pn { font-size: 0.6em; color: var(--rojo); font-family: monospace; }
+        .nombre { font-size: 0.85em; font-weight: bold; }
+
+        /* Contenedor de Botones y Número */
+        .controles {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stock-num {
+            font-size: 1.2em;
+            font-weight: bold;
+            min-width: 35px;
+            text-align: center;
+        }
+
+        /* Botones Pequeños y Cuadrados */
+        .btn {
+            background: var(--gris);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:active { background: var(--rojo); }
+
+        /* Alerta de Stock Bajo */
+        .bajo-stock { border-color: var(--rojo); }
+        .bajo-stock .stock-num { color: var(--rojo); }
+
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h2 style="margin:0;">GESTOR DE STOCK REAL</h2>
-        <small id="estado-db">Conectando...</small>
+        <h1>SISTEMA DE STOCK LEAR</h1>
     </div>
 
-    <div class="seccion-titulo">PROYECTO X6S (Cronos)</div>
-    <div id="contenedor-x6s"></div>
+    <div class="dashboard">
+        <div class="columna">
+            <div class="titulo-linea">Línea X6S</div>
+            <div id="lista-x6s"></div>
+        </div>
 
-    <div class="seccion-titulo">PROYECTO KP1 (Titano/Ram)</div>
-    <div id="contenedor-kp1"></div>
+        <div class="columna">
+            <div class="titulo-linea">Línea KP1</div>
+            <div id="lista-kp1"></div>
+        </div>
+    </div>
 
     <script>
-        // TU CONFIGURACIÓN DE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBosJkUx7sKYz8AfJAG6-7Ln0jGbzbw_FU",
             authDomain: "gestion-stock-lear.firebaseapp.com",
@@ -58,75 +140,58 @@
             appId: "1:351720665066:web:a54b5c3122960417bdcc93"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Definición de Modelos (basado en tu imagen)
         const modelos = [
-            { id: "entry", pn: "L003351135NCPAA", desc: "KIT ENTRY 26", linea: "X6S", color: "color-entry", seguridad: 420 },
-            { id: "drive", pn: "L003351251NCPAA", desc: "KIT DRIVE 26", linea: "X6S", color: "color-drive", seguridad: 420 },
-            { id: "apb", pn: "L003411462NCPAA", desc: "KIT DRIVE APB 26", linea: "X6S", color: "color-apb", seguridad: 200 },
-            { id: "sdesign", pn: "L003351252NCPAA", desc: "TELA SDESIGN 26", linea: "X6S", color: "color-sdesign", seguridad: 150 },
-            { id: "n2", pn: "L004097919NCPAA", desc: "N2 KP1", linea: "KP1", color: "color-kp1", seguridad: 120 },
-            { id: "bighorn", pn: "L003714499NCPAA", desc: "LL1 BIG HORN", linea: "KP1", color: "color-kp1", seguridad: 80 }
+            { id: "entry", pn: "L003351135NCPAA", desc: "KIT ENTRY 26", linea: "X6S", min: 420 },
+            { id: "drive", pn: "L003351251NCPAA", desc: "KIT DRIVE 26", linea: "X6S", min: 420 },
+            { id: "apb", pn: "L003411462NCPAA", desc: "KIT DRIVE APB 26", linea: "X6S", min: 200 },
+            { id: "sdesign", pn: "L003351252NCPAA", desc: "TELA SDESIGN 26", linea: "X6S", min: 150 },
+            { id: "n2", pn: "L004097919NCPAA", desc: "N2 KP1", linea: "KP1", min: 120 },
+            { id: "bighorn", pn: "L003714499NCPAA", desc: "LL1 BIG HORN", linea: "KP1", min: 80 },
+            { id: "rebel", pn: "L003714500NCPAA", desc: "LL2 REBEL", linea: "KP1", min: 50 },
+            { id: "laramie", pn: "L003714501NCPAA", desc: "LL3 LARAMIE", linea: "KP1", min: 50 }
         ];
 
-        // Función para renderizar tarjetas
-        function renderizarTarjetas() {
-            document.getElementById('contenedor-x6s').innerHTML = '';
-            document.getElementById('contenedor-kp1').innerHTML = '';
-
+        function render() {
             modelos.forEach(m => {
-                const contenedor = m.linea === "X6S" ? 'contenedor-x6s' : 'contenedor-kp1';
-                const card = document.createElement('div');
-                card.className = `card ${m.color}`;
-                card.id = `card-${m.id}`;
-                
-                card.innerHTML = `
-                    <div class="info">
-                        <div>
+                const html = `
+                    <div class="card" id="card-${m.id}">
+                        <div class="info">
                             <span class="pn">${m.pn}</span>
                             <span class="nombre">${m.desc}</span>
                         </div>
-                        <div class="stock-val" id="val-${m.id}">...</div>
-                    </div>
-                    <div class="controles">
-                        <button class="btn-menos" onclick="ajustar('${m.id}', -1)">LOGÍSTICA (-1)</button>
-                        <button class="btn-mas" onclick="ajustar('${m.id}', 1)">PRODUCCIÓN (+1)</button>
+                        <div class="controles">
+                            <button class="btn" onclick="cambiar('${m.id}', -1)">-</button>
+                            <div class="stock-num" id="stock-${m.id}">0</div>
+                            <button class="btn" onclick="cambiar('${m.id}', 1)">+</button>
+                        </div>
                     </div>
                 `;
-                document.getElementById(contenedor).appendChild(card);
+                const container = m.linea === "X6S" ? 'lista-x6s' : 'lista-kp1';
+                document.getElementById(container).innerHTML += html;
             });
         }
 
-        // Función para ajustar stock
-        window.ajustar = function(id, cambio) {
-            const ref = db.ref('stock/' + id);
-            ref.transaction(actual => (actual || 0) + cambio);
-        }
+        window.cambiar = (id, cant) => {
+            db.ref('stock/' + id).transaction(v => Math.max(0, (v || 0) + cant));
+        };
 
-        // Escuchar cambios en tiempo real
-        db.ref('stock').on('value', (snapshot) => {
-            document.getElementById('estado-db').innerText = "🟢 En línea (Tiempo Real)";
-            const data = snapshot.val() || {};
+        db.ref('stock').on('value', snap => {
+            const data = snap.val() || {};
             modelos.forEach(m => {
-                const stockActual = data[m.id] || 0;
-                const el = document.getElementById(`val-${m.id}`);
+                const val = data[m.id] || 0;
+                const el = document.getElementById(`stock-${m.id}`);
                 const card = document.getElementById(`card-${m.id}`);
-                
-                if(el) el.innerText = stockActual;
-                
-                // Alerta de stock de seguridad
-                if(stockActual < m.seguridad) {
-                    card.classList.add('critico');
-                } else {
-                    card.classList.remove('critico');
+                if(el) {
+                    el.innerText = val;
+                    val < m.min ? card.classList.add('bajo-stock') : card.classList.remove('bajo-stock');
                 }
             });
         });
 
-        renderizarTarjetas();
+        render();
     </script>
 </body>
 </html>
